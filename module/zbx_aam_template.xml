@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
-    <version>2.0</version>
-    <date>2015-09-09T07:03:56Z</date>
+    <version>3.0</version>
+    <date>2016-07-26T05:59:01Z</date>
     <groups>
         <group>
             <name>Templates</name>
@@ -9,8 +9,8 @@
     </groups>
     <templates>
         <template>
-            <template>Template Advanced Application Monitoring</template>
-            <name>Template Advanced Application Monitoring</name>
+            <template>Template Automatic Application Monitoring</template>
+            <name>Template Automatic Application Monitoring</name>
             <description>https://enrise.com/2015/10/automating-application-component-monitoring/</description>
             <groups>
                 <group>
@@ -56,14 +56,16 @@
                     <publickey/>
                     <privatekey/>
                     <port/>
-                    <description/>
+                    <description>Used for auto-discovering monitoring items, by retrieving JSON from the given endpoint.</description>
                     <inventory_link>0</inventory_link>
                     <applications>
                         <application>
                             <name>Automatic Application Monitoring</name>
                         </application>
                     </applications>
-                    <valuemap/>
+                    <valuemap>
+                        <name>AAM Backend Results</name>
+                    </valuemap>
                     <logtimefmt/>
                 </item>
                 <item>
@@ -73,7 +75,7 @@
                     <multiplier>0</multiplier>
                     <snmp_oid/>
                     <key>aam.py[&quot;status&quot;, &quot;{HOST.HOST}&quot;, &quot;{$AAM_STATUS_ENDPOINT}&quot;]</key>
-                    <delay>300</delay>
+                    <delay>120</delay>
                     <history>90</history>
                     <trends>365</trends>
                     <status>0</status>
@@ -99,14 +101,16 @@
                     <publickey/>
                     <privatekey/>
                     <port/>
-                    <description/>
+                    <description>Retrieves all the status details and processes based on discovery</description>
                     <inventory_link>0</inventory_link>
                     <applications>
                         <application>
                             <name>Automatic Application Monitoring</name>
                         </application>
                     </applications>
-                    <valuemap/>
+                    <valuemap>
+                        <name>AAM Backend Results</name>
+                    </valuemap>
                     <logtimefmt/>
                 </item>
             </items>
@@ -142,7 +146,7 @@
                         <conditions/>
                     </filter>
                     <lifetime>0</lifetime>
-                    <description/>
+                    <description>Used to feed discovery data of available components to monitor</description>
                     <item_prototypes>
                         <item_prototype>
                             <name>Component status - $1</name>
@@ -177,7 +181,7 @@
                             <publickey/>
                             <privatekey/>
                             <port/>
-                            <description/>
+                            <description>Monitoring of auto-discovered application component {#COMPONENT}.</description>
                             <inventory_link>0</inventory_link>
                             <applications>
                                 <application>
@@ -188,17 +192,19 @@
                                 <name>AAM Statuscodes</name>
                             </valuemap>
                             <logtimefmt/>
+                            <application_prototypes/>
                         </item_prototype>
                     </item_prototypes>
                     <trigger_prototypes>
                         <trigger_prototype>
-                            <expression>{Template Advanced Application Monitoring:aam.status[{#COMPONENT}].last()}&lt;&gt;0</expression>
-                            <name>Application component {#COMPONENT} is in {ITEM.VALUE} state</name>
+                            <expression>{Template Automatic Application Monitoring:aam.status[{#COMPONENT}].min({$AAM_THRESHOLD_COMPONENT})}&gt;0</expression>
+                            <name>Application component {#COMPONENT} is in {ITEM.VALUE} state on {HOSTNAME}</name>
                             <url/>
                             <status>0</status>
-                            <priority>4</priority>
+                            <priority>5</priority>
                             <description/>
                             <type>0</type>
+                            <dependencies/>
                         </trigger_prototype>
                     </trigger_prototypes>
                     <graph_prototypes/>
@@ -214,9 +220,117 @@
                     <macro>{$AAM_STATUS_ENDPOINT}</macro>
                     <value/>
                 </macro>
+                <macro>
+                    <macro>{$AAM_THRESHOLD_COMPONENT}</macro>
+                    <value>5m</value>
+                </macro>
+                <macro>
+                    <macro>{$AAM_THRESHOLD_KEY}</macro>
+                    <value>#2</value>
+                </macro>
+                <macro>
+                    <macro>{$AAM_THRESHOLD_STATUS}</macro>
+                    <value>#3</value>
+                </macro>
             </macros>
             <templates/>
-            <screens/>
+            <screens>
+                <screen>
+                    <name>Application Monitoring</name>
+                    <hsize>1</hsize>
+                    <vsize>1</vsize>
+                    <screen_items>
+                        <screen_item>
+                            <resourcetype>19</resourcetype>
+                            <width>500</width>
+                            <height>100</height>
+                            <x>0</x>
+                            <y>0</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <style>0</style>
+                            <url/>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <resource>
+                                <key>aam.status[{#COMPONENT}]</key>
+                                <host>Template Automatic Application Monitoring</host>
+                            </resource>
+                            <max_columns>3</max_columns>
+                            <application/>
+                        </screen_item>
+                    </screen_items>
+                </screen>
+            </screens>
         </template>
     </templates>
+    <triggers>
+        <trigger>
+            <expression>{Template Automatic Application Monitoring:aam.py[&quot;discovery&quot;,&quot;{HOST.HOST}&quot;,&quot;{$AAM_KEY_ENDPOINT}&quot;].nodata(60m)}&gt;0 or {Template Automatic Application Monitoring:aam.py[&quot;discovery&quot;,&quot;{HOST.HOST}&quot;,&quot;{$AAM_KEY_ENDPOINT}&quot;].last()}&gt;0</expression>
+            <name>Unable to retrieve application components for {HOSTNAME}: {ITEM.VALUE}</name>
+            <url>{$AAM_KEY_ENDPOINT}</url>
+            <status>0</status>
+            <priority>4</priority>
+            <description>Retrieve JSON feed from with application components to monitor</description>
+            <type>0</type>
+            <dependencies/>
+        </trigger>
+        <trigger>
+            <expression>{Template Automatic Application Monitoring:aam.py[&quot;status&quot;, &quot;{HOST.HOST}&quot;, &quot;{$AAM_STATUS_ENDPOINT}&quot;].nodata(5m)}&gt;0 or {Template Automatic Application Monitoring:aam.py[&quot;status&quot;, &quot;{HOST.HOST}&quot;, &quot;{$AAM_STATUS_ENDPOINT}&quot;].last()}&gt;0</expression>
+            <name>Unable to retrieve application component status on {HOSTNAME}: {ITEM.VALUE}</name>
+            <url>{$AAM_STATUS_ENDPOINT}</url>
+            <status>0</status>
+            <priority>5</priority>
+            <description>Retrieve JSON feed with component status</description>
+            <type>0</type>
+            <dependencies/>
+        </trigger>
+    </triggers>
+    <value_maps>
+        <value_map>
+            <name>AAM Backend Results</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>OK</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>Zabbix API init error</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>No data / Timeout</newvalue>
+                </mapping>
+                <mapping>
+                    <value>4</value>
+                    <newvalue>Zabbix API add error</newvalue>
+                </mapping>
+                <mapping>
+                    <value>5</value>
+                    <newvalue>Zabbix API send error</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>AAM Statuscodes</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>OK</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>Failure</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>Degraded</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+    </value_maps>
 </zabbix_export>
