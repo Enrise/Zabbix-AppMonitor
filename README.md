@@ -50,13 +50,6 @@ $ sudo easy_install pip
 ```
 
 * Add `aam.py` to your external scripts (default: `/usr/lib/zabbix/externalscripts/`) folder on your Zabbix Server and ensure it is executable.
-* In Zabbix under `Administration => General => Value Mapping` create a value map "AAM Statuscodes" with the following values:
-
-| Value | Mapped to  |
-|-------|------------|
-|   0   | OK         |
-|   1   | Failure    |
-|   2   | Degraded   |
 
 * Under `Configuration => Templates` in the Zabbix webinterface import `zbx_aam_template.xml`
 * To the host you want to monitor, add the following macro's:
@@ -66,8 +59,7 @@ $ sudo easy_install pip
 | {$AAM_KEY_ENDPOINT}    | http://your-application/appmon/keys   |
 | {$AAM_STATUS_ENDPOINT} | http://your-application/appmon/status |
 
-*The URL's should point towards the endpoints you have created. They can be routes, individual pages or queryable with HTTP Params depending on your application as long as the output matches what the module requires.*
-
+*The URL's should point towards the endpoints you have created. They can be routes, individual pages, static files or queryable with HTTP-Parameters depending on your application as long as the output matches what the module requires.*
 
 * Optionally you can override the default values for some querying periods:
 
