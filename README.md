@@ -1,4 +1,4 @@
-Automatic Application Monitoring
+Automatic Application Monitoring - v2
 ===
 This Zabbix "module" provides automated Application Component monitoring by utilizing the Low-Level Discovery functionality of Zabbix.
 
@@ -12,35 +12,61 @@ In your application you should create two endpoints which should be available as
 ### Key endpoint
 This should return a JSON array of available keys like so:
 ```json
-["api",
-"filesystem",
-"mysql",
-"redis",
-"rabbitmq",
-"vpn",
-"backup"
-]
+{
+    "Unclassified Component": {
+        "severity": "unclassified"
+    },
+    "Information Component": {
+        "severity": "information"
+    },
+    "Warning Component": {
+        "severity": "warning"
+    },
+    "Average Component": {
+        "severity": "average"
+    },
+    "High Component": {
+        "severity": "high"
+    },
+    "Disaster Component": {
+        "severity": "disaster"
+    }
+}
 ```
 
 ### Status endpoint
 This should return the status in JSON for all available components:
 ```json
 {
-  "api":{"statusCode":2,"status":"Degraded"},
-  "filesystem":{"statusCode":2,"status":"Degraded"},
-  "mysql":{"statusCode":2,"status":"Degraded"},
-  "redis":{"statusCode":2,"status":"Degraded"},
-  "rabbitmq":{"statusCode":2,"status":"Degraded"},
-  "vpn":{"statusCode":1,"status":"Failure"},
-  "backup":{"statusCode":0,"status":"OK"}
+    "Unclassified Component": {
+        "statusCode": 0,
+        "severity": "unclassified"
+    },
+    "Information Component": {
+        "statusCode": 0,
+        "severity": "information"
+    },
+    "Warning Component": {
+        "statusCode": 0,
+        "severity": "warning"
+    },
+    "Average Component": {
+        "statusCode": 0,
+        "severity": "average"
+    },
+    "High Component": {
+        "statusCode": 0,
+        "severity": "high"
+    },
+    "Disaster Component": {
+        "statusCode": 0,
+        "severity": "disaster"
+    }
 }
 ```
-
-The field "status" is currently not being used, only "statusCode".
-
 ## Installation in Zabbix
 
-* Install the dependencies for AAM:
+* Install the dependencies for AAMv2:
 ```shell
 $ sudo pip install -r requirements.txt
 ```
@@ -49,9 +75,9 @@ If pip is not present on your system:
 $ sudo easy_install pip
 ```
 
-* Add `aam.py` to your external scripts (default: `/usr/lib/zabbix/externalscripts/`) folder on your Zabbix Server and ensure it is executable.
+* Add `aamv2.py` to your external scripts (default: `/usr/lib/zabbix/externalscripts/`) folder on your Zabbix Server and ensure it is executable.
 
-* Under `Configuration => Templates` in the Zabbix webinterface import `zbx_aam_template.xml`
+* Under `Configuration => Templates` in the Zabbix webinterface import `zbx_aamv2_template.xml`
 * To the host you want to monitor, add the following macro's:
 
 | Macro                  | Value                                 |
@@ -69,7 +95,7 @@ $ sudo easy_install pip
 | {$AAM_THRESHOLD_KEY}       |       #2       |
 | {$AAM_THRESHOLD_STATUS}    |       #2       |
 
-* Assign the template `Template Automatic Application Monitoring` to the host you want to monitor the application of. If your host has multiple applications its recommended to create a dummy host in Zabbix for each application on the server.
+* Assign the template `Template Automatic Application Monitoring v2` to the host you want to monitor the application of. If your host has multiple applications its recommended to create a dummy host in Zabbix for each application on the server.
 * After some time it will automatically create the items and trigger for status reporting
 
 ## Demo app

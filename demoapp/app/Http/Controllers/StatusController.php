@@ -5,13 +5,13 @@ namespace App\Http\Controllers;
 class StatusController extends Controller
 {
     protected $appKeys = [
-        'api',
-        'filesystem',
-        'mysql',
-        'redis',
-        'rabbitmq',
-        'vpn',
-        'backup'
+        'api' => 'critical',
+        'filesystem' => 'cricital',
+        'mysql' => 'critical',
+        'redis' => 'critical',
+        'rabbitmq' => 'critical',
+        'vpn' => 'high',
+        'backup' => 'warning'
     ];
 
     protected $statusOptions = [
@@ -25,7 +25,16 @@ class StatusController extends Controller
      */
     public function getKeys()
     {
-        return response()->json($this->appKeys);
+        #return response()->json($this->appKeys);
+        $response = [];
+
+        foreach ($this->appKeys as $appKey => $severity) {
+            $response[$appKey] = [
+                'severity' => $severity
+            ];
+        }
+
+        return response()->json($response);
     }
 
     /**
@@ -37,12 +46,12 @@ class StatusController extends Controller
 
         $maxOptions = count($this->statusOptions) - 1;
 
-        foreach ($this->appKeys as $appKey) {
+        foreach ($this->appKeys as $appKey => $severity) {
             $statusCode = rand(0, $maxOptions);
 
             $response[$appKey] = [
                 'statusCode' => $statusCode,
-                'status' => $this->statusOptions[$statusCode]
+                'severity' => $severity
             ];
         }
 
