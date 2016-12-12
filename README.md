@@ -10,7 +10,10 @@ Background details: https://enrise.com/2015/10/automating-application-component-
 In your application you should create two endpoints which should be available as a page which responds with JSON.
 
 ### Key endpoint
-This should return a JSON array of available keys like so:
+This endpoint provides all available keys to Zabbix, which is used in the auto-discovery of components.
+Based on the content, items and triggers will be created from the prototype.
+
+This endpoint should return a JSON array of available keys like this:
 ```json
 {
     "Unclassified Component": {
@@ -35,7 +38,9 @@ This should return a JSON array of available keys like so:
 ```
 
 ### Status endpoint
-This should return the status in JSON for all available components:
+This endpoint provides the generated items with data, on which the triggers will be evaluated.
+
+This endpoint should return the status in JSON for all available components:
 ```json
 {
     "Unclassified Component": {
@@ -89,11 +94,11 @@ $ sudo easy_install pip
 
 * Optionally you can override the default values for some querying periods:
 
-| Macro                      | Default value  |
-|----------------------------|----------------|
-| $AAM_THRESHOLD_COMPONENT   |       5m       |
-| {$AAM_THRESHOLD_KEY}       |       #2       |
-| {$AAM_THRESHOLD_STATUS}    |       #2       |
+| Macro                      | Default value  | Usage                                                                                              |
+|----------------------------|----------------|----------------------------------------------------------------------------------------------------|
+| ${AAM_THRESHOLD_COMPONENT} |       5m       | Threshold for usage in `min()` on the discovered components                                        |
+| {$AAM_PERIOD_STATUS}       |       5m       | Used to override the template's trigger in case the period has been modified on the inherited item |
+| {$AAM_PERIOD_DISCOVERY}    |       30m      | Used to override the template's trigger in case the period has been modified on the inherited item |
 
 * Assign the template `Template Automatic Application Monitoring v2` to the host you want to monitor the application of. If your host has multiple applications its recommended to create a dummy host in Zabbix for each application on the server.
 * After some time it will automatically create the items and trigger for status reporting
@@ -101,7 +106,7 @@ $ sudo easy_install pip
 ## Demo app
 The folder `demoapp` contains a [Lumen](http://lumen.laravel.com/) PHP application which showcases the output it can generate. The most interesting part of the code is the `app/Http/Controllers/StatusController.php`.
 
-This app serves as a demo on how to implement it. It is in no way a requirement to be able to use the Zabbix module.
+This app serves as a demo on how to implement it. It is in no way a requirement to be able to use the Zabbix module. As long as your application produces the correct JSON output you can use any programming language or framework.
 
 ## Contributing
 Contributions to this module and its implementation are welcome!

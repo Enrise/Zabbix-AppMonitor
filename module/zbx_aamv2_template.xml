@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>3.2</version>
-    <date>2016-12-07T14:12:12Z</date>
+    <date>2016-12-12T10:51:23Z</date>
     <groups>
         <group>
             <name>Templates</name>
@@ -825,20 +825,20 @@
                     <value/>
                 </macro>
                 <macro>
+                    <macro>{$AAM_PERIOD_DISCOVERY}</macro>
+                    <value>60m</value>
+                </macro>
+                <macro>
+                    <macro>{$AAM_PERIOD_STATUS}</macro>
+                    <value>5m</value>
+                </macro>
+                <macro>
                     <macro>{$AAM_STATUS_ENDPOINT}</macro>
                     <value/>
                 </macro>
                 <macro>
                     <macro>{$AAM_THRESHOLD_COMPONENT}</macro>
                     <value>5m</value>
-                </macro>
-                <macro>
-                    <macro>{$AAM_THRESHOLD_KEY}</macro>
-                    <value>#2</value>
-                </macro>
-                <macro>
-                    <macro>{$AAM_THRESHOLD_STATUS}</macro>
-                    <value>#3</value>
                 </macro>
             </macros>
             <templates/>
@@ -877,7 +877,7 @@
     </templates>
     <triggers>
         <trigger>
-            <expression>{Template Automatic Application Monitoring v2:aamv2.py[&quot;--discovery&quot;,&quot;{HOST.HOST}&quot;,&quot;{$AAM_KEY_ENDPOINT}&quot;].nodata(60m)}&gt;0 or {Template Automatic Application Monitoring v2:aamv2.py[&quot;--discovery&quot;,&quot;{HOST.HOST}&quot;,&quot;{$AAM_KEY_ENDPOINT}&quot;].last()}&gt;0</expression>
+            <expression>{Template Automatic Application Monitoring v2:aamv2.py[&quot;--discovery&quot;,&quot;{HOST.HOST}&quot;,&quot;{$AAM_KEY_ENDPOINT}&quot;].nodata({$AAM_PERIOD_DISCOVERY})}&gt;0 or {Template Automatic Application Monitoring v2:aamv2.py[&quot;--discovery&quot;,&quot;{HOST.HOST}&quot;,&quot;{$AAM_KEY_ENDPOINT}&quot;].last()}&gt;0</expression>
             <recovery_mode>0</recovery_mode>
             <recovery_expression/>
             <name>AAMv2: Unable to retrieve application components for {HOSTNAME}: {ITEM.VALUE}</name>
@@ -898,7 +898,7 @@
             </tags>
         </trigger>
         <trigger>
-            <expression>{Template Automatic Application Monitoring v2:aamv2.py[&quot;--update-items&quot;, &quot;{HOST.HOST}&quot;, &quot;{$AAM_STATUS_ENDPOINT}&quot;].nodata(5m)}&gt;0 or {Template Automatic Application Monitoring v2:aamv2.py[&quot;--update-items&quot;, &quot;{HOST.HOST}&quot;, &quot;{$AAM_STATUS_ENDPOINT}&quot;].last()}&gt;0</expression>
+            <expression>{Template Automatic Application Monitoring v2:aamv2.py[&quot;--update-items&quot;, &quot;{HOST.HOST}&quot;, &quot;{$AAM_STATUS_ENDPOINT}&quot;].nodata({$AAM_PERIOD_STATUS})}&gt;0 or {Template Automatic Application Monitoring v2:aamv2.py[&quot;--update-items&quot;, &quot;{HOST.HOST}&quot;, &quot;{$AAM_STATUS_ENDPOINT}&quot;].last()}&gt;0</expression>
             <recovery_mode>0</recovery_mode>
             <recovery_expression/>
             <name>AAMv2: Unable to retrieve application component status on {HOSTNAME}: {ITEM.VALUE}</name>
