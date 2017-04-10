@@ -3,25 +3,28 @@
 """
 Advanced Application Monitoring v2
 """
-import argparse
-import socket
 import sys
+
 import protobix
 import requests
 
+
 class AAMv2(protobix.SampleProbe):
-    __version__="2.0.0"
-    severities = ['unclassified','information','warning','average','high','disaster']
+    __version__ = "2.0.1"
+    severities = ['unclassified', 'information', 'warning', 'average', 'high', 'disaster']
 
     def _validate_severity(self, severity):
         return severity in self.severities
 
     def _get_severity(self, component):
-        return 'unclassified' if not isinstance(component, dict) \
+        if isinstance(component, unicode) \
+                or isinstance(component, str) \
+                or not isinstance(component, dict) \
                 or not 'severity' in component \
-                or not self._validate_severity(component['severity']) else component['severity']
-
-        return severity
+                or not self._validate_severity(component['severity']):
+            return 'unclassified'
+        else:
+            return component['severity']
 
     def _get_timeout(self):
         try:
@@ -51,10 +54,13 @@ class AAMv2(protobix.SampleProbe):
             content = requests.get(self.options.url, headers=headers, timeout=timeout).json()
         except requests.exceptions.Timeout:
             if self.logger:
-                self.logger.error('HTTP timeout while retrieving content for {0} after {1} seconds.'.format(self.options.hostname, timeout,))
+                self.logger.error(
+                    'HTTP timeout while retrieving content for {0} after {1} seconds.'.format(self.options.hostname,
+                                                                                              timeout, ))
         except requests.exceptions.RequestException as e:  # catastrophic error. bail.
             if self.logger:  # pragma: no cover
-                self.logger.error('HTTP error occurred while retrieving content for {0}: {1}'.format(self.options.hostname, e,))
+                self.logger.error(
+                    'HTTP error occurred while retrieving content for {0}: {1}'.format(self.options.hostname, e, ))
 
         return content
 
@@ -69,7 +75,7 @@ class AAMv2(protobix.SampleProbe):
         return parser
 
     def _init_probe(self):
-        # Whatever you need to initiliaze your probe
+        # Whatever you need to initialize your probe
         # Can be establishing a connection
         # Or reading a configuration file
         # If you have nothing special to do
@@ -82,11 +88,17 @@ class AAMv2(protobix.SampleProbe):
         # this method is mandatory
         # If not declared, calling the probe ith --discovery option will resut in a NotimplementedError
         components = self._get_content()
+
         if not components:
             if self.logger:
                 self.logger.error('Unable to retrieve discovery for host {0}.'.format(self.options.hostname))
-
             return False
+
+        if isinstance(components, list):
+            if self.logger:
+                self.logger.debug(
+                    'Upgrading response to v2 compatible format for host {0}.'.format(self.options.hostname))
+                components = self._upgrade_v1_discovery_response(components)
 
         data = {}
         discovery_data = {}
@@ -100,15 +112,23 @@ class AAMv2(protobix.SampleProbe):
 
                 discovery_data[discoveryKey].append({'{#COMPONENT}': component, '{#SEVERITY}': severity})
             except:
+                if self.logger:  # pragma: no cover
+                    self.logger.error('Unable to retrieve components for host {0}.'.format(self.options.hostname))
+
                 pass
 
         try:
             data[self.options.hostname] = discovery_data
         except:
-            return data
+            pass
 
         return data
 
+    def _upgrade_v1_discovery_response(self, components):
+        dct = {}
+        for component in components:
+            dct[component] = {'severity': 'disaster'}
+        return dct
 
     def _get_metrics(self):
         # Whatever you need to do to collect metrics
@@ -125,14 +145,24 @@ class AAMv2(protobix.SampleProbe):
 
         for component in components:
             try:
+                if 'severity' not in components[component]:
+                    # Become bw compatible with v1 endpoints where severity is not part of the return dict
+                    if self.logger:
+                        self.logger.debug(
+                            'Upgrading response to v2 compatible format for host {0}.'.format(self.options.hostname))
+                    components[component]['severity'] = 'disaster'
+
                 severity = self._get_severity(components[component])
 
-                item_key = 'aamv2.status["{0}",{1}]'.format(component,severity)
+                item_key = 'aamv2.status["{0}",{1}]'.format(component, severity)
                 data[self.options.hostname][item_key] = components[component]['statusCode']
             except:
+                if self.logger:  # pragma: no cover
+                    self.logger.error('Unable to retrieve metrics for host {0}.'.format(self.options.hostname))
                 pass
 
         return data
+
 
 if __name__ == '__main__':
     ret = AAMv2().run()
