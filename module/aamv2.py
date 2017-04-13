@@ -10,7 +10,7 @@ import requests
 
 
 class AAMv2(protobix.SampleProbe):
-    __version__ = "2.0.1"
+    __version__ = "2.0.2"
     severities = ['unclassified', 'information', 'warning', 'average', 'high', 'disaster']
 
     def _validate_severity(self, severity):
@@ -154,7 +154,7 @@ class AAMv2(protobix.SampleProbe):
 
                 severity = self._get_severity(components[component])
 
-                item_key = 'aamv2.status["{0}",{1}]'.format(component, severity)
+                item_key = 'aamv2.status[{0},{1}]'.format(component, severity)
                 data[self.options.hostname][item_key] = components[component]['statusCode']
             except:
                 if self.logger:  # pragma: no cover
